@@ -1,0 +1,152 @@
+---
+title: "615 midterm project"
+author: "Xiangliang Liu"
+date: "December 9, 2018"
+output: pdf_document
+---
+
+##Introduction:
+
+*Watching movie is always a good recreation for people who live under a stressful life style. However, we are constantly facing fake revenue record regarding to the newly released movie. This project will mainly focus on exploring some fundamental information about 5000 movies in the dataset called "The Movie Data Base". *
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Data visualization and EDA:
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#Load package
+library(benford.analysis)
+library(readr)
+library(dplyr)
+library(tidyverse)
+library(kableExtra)
+library(jsonlite) 
+library(RColorBrewer)
+library(wordcloud)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#Read in the data and data cleaning:
+tmdb <- read_csv("tmdb_5000_movies.csv")
+
+#Use dplyr to specify the columns
+movie <- tmdb %>%
+  select(budget, genres, id, popularity, title, production_companies, production_countries, revenue, vote_average, vote_count)%>%
+  filter(budget>0 & revenue>0)
+summary(movie)#summary of the data
+
+#Convert JSON format into data frame
+#genre data:
+genre_data <-movie %>% filter(nchar(genres)>2) %>% mutate(js=lapply(genres,fromJSON)) %>% unnest(js) %>% select(genre=name) 
+
+#country data:
+country_data <- movie %>%filter(nchar(production_countries)>2)%>% mutate(cntry=lapply(production_countries,fromJSON)) %>% unnest(cntry) %>% select( id,production_countries=name)
+country_data$production_countries<- recode(country_data$production_countries,"United States of America" = "USA", "United Kingdom" = "UK")
+```
+
+###EDA
+####Check the distribution plot with varible budget, revenue, popularity and number of count
+```{r echo=FALSE}
+
+ggplot(movie,aes(x = budget)) + geom_histogram(fill ="sky blue", color = "black")+ggtitle("The distribution of budget")
+
+ggplot(movie,aes(x = revenue)) + geom_histogram(fill ="sky blue", color = "black")+ggtitle("The distribution of revenue")
+
+ggplot(movie,aes(x = popularity)) + geom_histogram(fill ="sky blue", color = "black")+ggtitle("The distribution of popularity")
+
+ggplot(movie,aes(x =vote_count )) + geom_histogram(fill ="sky blue", color = "black")+ggtitle("The distribution of number of vote")
+
+```
+
+####Most popular movies
+```{r}
+#Top 20 most popular movie
+pop<-movie%>%
+  select(title, popularity)%>%
+  arrange(desc(popularity))
+pop <- pop[c(0:20),]
+ggplot(data = pop, aes(x=reorder(title, popularity ), y=popularity)) +
+        geom_col(fill="sky blue") + coord_flip() +
+        labs(x = "" , y=" Popularity")+ geom_text(aes(label = popularity))
+
+```
+
+*The plot showing above indicates the top 20 most popular movie in the movie data base. The movie Minions is the movie with biggest popularity*
+
+
+###Create a genre wordcloud
+```{r}
+# distribution plot of Genre
+genre_data %>% group_by(genre) %>% count() %>%
+        ggplot(aes(x=reorder(genre, n), y=n)) +
+        geom_col(fill="sky blue") + coord_flip() +
+        labs(x = "", y = "Number of movies")+geom_text(aes(label = n))
+
+#Wordcloud
+genre_data %>%
+  group_by(genre)%>%
+  count(genre)%>%
+  with(wordcloud(genre, n, max.words =20,random.order= TRUE,random.color= T,rot.per=0.35,colors = brewer.pal(20,"Dark2"),scale=c(4,.2)))
+```
+*The wordclouds gives us a general idea about which genres have the largest proportion. It turns out that Drama, Comedy and Thriller are the top 3 genres with highest number of movies*
+
+
+###mapping with production countries
+```{r warning=FALSE}
+#mapping
+map.world = map_data("world")
+
+country<-country_data %>%
+  group_by(production_countries)%>%
+  count(production_countries)%>%
+  arrange(desc(n))%>%
+  filter(n >20)
+
+ggplot( data= country,aes(x=  reorder(production_countries,n), y = n, fill = production_countries))+ geom_col() + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + ggtitle("the distribution of movies in different country")+ geom_text(aes(label = n,),position = position_dodge(0.9),vjust = 0) + coord_flip()
+ #from the plot we can see USA has the most number of movie in the dataset.
+
+
+map.world_joined <- left_join(map.world, country, by = c('region' = 'production_countries'))
+map.world_joined <- map.world_joined %>% mutate(fill_flg = ifelse(is.na(n),F,T))
+
+
+ggplot() +
+  geom_polygon(data = map.world_joined, aes(x = long, y = lat, group = group, fill = fill_flg)) +
+  scale_fill_manual(values = c("#CCCCCC","#e60000")) +
+  labs(title = "Countries with more than 20 movies") +
+  theme(text = element_text(family = "Gill Sans", color = "#FFFFFF")
+        ,panel.background = element_rect(fill = "#444444")
+        ,plot.background = element_rect(fill = "#444444")
+        ,panel.grid = element_blank()
+        ,plot.title = element_text(size = 30)
+        ,plot.subtitle = element_text(size = 10)
+        ,axis.text = element_blank()
+        ,axis.title = element_blank()
+        ,axis.ticks = element_blank()
+        ,legend.position = "none")
+```
+##Bnford analysis:
+```{r}
+#benford analysis base on diferent variables.
+movie_b <- benford(movie$budget)
+plot(movie_b)
+movie_b
+```
+*as we can see from the distrbution and summary of the Benfore test, the budget data in movie dose not follow Benford distribution. A lot of lines exceed the red line threshold. Also the p-value in the summary is less than 0.05, which reject the htpothesis that the distribution follow benford distribution. The budget that start with 50 and 20 have the highest deviation. This result does make sense, because when people decide to make a movie approve a movie, they never specific the budget to a unit digit. *
+
+```{r}
+movie_r <- benford(movie$revenue)
+plot(movie_r)  
+movie_r
+```
+*The benford test on revenue indicates p-value is 0.2925 > 0.05, so do not reject the hypothesis that the distribution follow Benford distribution. This is result is what *
+
+```{r}
+movie_p <- benford(movie$popularity)
+plot(movie_p)  
+movie_p
+```
+*As for the variable popularity, the p-values from Chi-squared test is 0.0001389, which is less than 0.05. So do not reject the hypothesis that the distribution follow Benford distribution*
+
+
