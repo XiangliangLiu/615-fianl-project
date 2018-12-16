@@ -5,8 +5,8 @@ account: ianliu
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 618096
-bundleId: 1766974
+bundleId: 1767037
 url: https://ianliu.shinyapps.io/615Final/
-when: 1544986173.62035
+when: 1544988651.74459
 asMultiple: FALSE
 asStatic: FALSE

@@ -104,6 +104,7 @@ server <- function(input, output) {
   library(jsonlite) 
   library(RColorBrewer)
   library(wordcloud)
+  library(maps)
   #read in data and data cleaning
   tmdb <- read_csv("tmdb_5000_movies.csv")
   movie <- tmdb %>%
@@ -230,7 +231,7 @@ There are a few limitations about the benford analysis. We can only test whether
          output$wordcloud <- renderPlot(
           
           
-          wordcloud_rep(genres$genre, genres$n, max.words = input$max, random.order = TRUE, random.color = T, rot.per = 0.35, colors = brewer.pal(20,"Dark2"), scale = c(4,.2))
+          wordcloud_rep(genres$genre, genres$n, max.words = input$max, random.order = TRUE, rot.per = 0.35,colors = brewer.pal(8,"Dark2"), scale = c(4,.2))
         )
   
 }
