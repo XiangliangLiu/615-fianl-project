@@ -133,9 +133,10 @@ country<-country_data %>%
 
 ggplot(data= country, aes(x = reorder(production_countries, n), y = n, fill = production_countries))+ 
   geom_col() + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
-  ggtitle("the distribution of movies in different country")+ 
+  ggtitle("the distribution of movies in different countries")+ 
   geom_text(aes(label = n),position = position_dodge(0.9),vjust = 0) + 
-  coord_flip()
+  coord_flip()+
+  labs(x = "", y ="number of movies")
  #from the plot we can see USA has the most number of movie in the dataset.
 
 
