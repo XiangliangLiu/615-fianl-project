@@ -1,11 +1,12 @@
-
+library(shiny)
+library(shinythemes)
 
 # Define UI for application that draws a histogram
-ui <- navbarPage("Final Report - the movie data base",
+ui <- navbarPage(theme = shinytheme("cerulean"),
+                 "Final Report - the movie data base",
 
-  
  #First tab
-  tabPanel("Explore the dataset",
+  tabPanel( "Explore the dataset",
   
   sidebarLayout(
     sidebarPanel(
@@ -28,10 +29,9 @@ tabPanel("Display countries with more than 20 movies",
            # Show a plot of the generated distribution
            mainPanel("Countries with more than 20 movies",
              plotOutput("maps")
-             
            )
-         
 ),
+
 #Third tab
 tabPanel("Display the beford distribution",
          
@@ -49,7 +49,6 @@ tabPanel("Display the beford distribution",
 ),
 #Fourth tab
 tabPanel("Benford Analysis Summary",
-         
          sidebarLayout(
            sidebarPanel(
              selectInput("var2","Select the variable form the TMDB dataset", choices = c("budget", "popularity","revenue","vote_count"), selected = "budget")
@@ -57,17 +56,26 @@ tabPanel("Benford Analysis Summary",
            
            # Show a plot of the generated distribution
            mainPanel("Benford analysis summary",
-            
              verbatimTextOutput("summary")
            )
+         )
+),
+#Fifth tab
+tabPanel("Conclusion",
+         
+         # Show conclusion
+         mainPanel("insights and findings",
+                   verbatimTextOutput("conclusion1"),
+                   "limitation",
+                   verbatimTextOutput("conclusion2")
          )
 )
 )
 
 
-
 # Define server logic
 server <- function(input, output) {
+  
   #load all the packages
   library(benford.analysis)
   library(readr)
@@ -78,7 +86,8 @@ server <- function(input, output) {
   library(knitr)
   library(jsonlite) 
   library(RColorBrewer)
-  #readRin data and data cleaning
+  
+  #read in data and data cleaning
   tmdb <- read_csv("tmdb_5000_movies.csv")
   movie <- tmdb %>%
     select(budget, popularity, revenue,vote_count,production_countries)%>%
@@ -143,8 +152,7 @@ server <- function(input, output) {
       }
      )
  
-
-      output$benford <- renderPlot(
+    output$benford <- renderPlot(
         
         if(input$var1 =="budget"){
           
@@ -184,6 +192,14 @@ server <- function(input, output) {
           print(benford(movie$vote_count))
         }
       )
+         output$conclusion1 <- renderText({
+           "insights and findings:
+We found the budget numbers do not significantly follow Benford analysis. The budget that start with 50 and 20 have the highest deviation. This result does make sense, because when people decide to make a movie or approve a movie, they never specific the budget to a unit digit. For instant, the number could be 500 million or 200 million dollars"
+         })
+         output$conclusion2 <- renderText({
+           "limitation:
+There are a few limitations about the benford analysis. We can only test whether the data follow Benford distribution. After that, even if we know the data does not follow the distribution, we still have to do more research on the data to explore whether there are some frauds in the data."
+         })
  
   
 }
