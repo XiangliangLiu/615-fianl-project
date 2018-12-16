@@ -60,7 +60,24 @@ tabPanel("Benford Analysis Summary",
            )
          )
 ),
+
 #Fifth tab
+tabPanel("Genre word cloud",
+  sidebarLayout(
+    # Sidebar with a slider and selection inputs
+    sidebarPanel(
+      sliderInput("max",
+                  "Maximum Number of Words:",
+                  min = 1,  max = 19,  value = 15)
+    ),
+    
+    # Show Word Cloud
+    mainPanel(
+      plotOutput("wordcloud")
+    )
+)
+),
+#Sixth tab
 tabPanel("Conclusion",
          
          # Show conclusion
@@ -86,12 +103,21 @@ server <- function(input, output) {
   library(knitr)
   library(jsonlite) 
   library(RColorBrewer)
-  
+  library(wordcloud)
   #read in data and data cleaning
   tmdb <- read_csv("tmdb_5000_movies.csv")
   movie <- tmdb %>%
-    select(budget, popularity, revenue,vote_count,production_countries)%>%
+    select(budget, genres,popularity, revenue,vote_count,production_countries)%>%
     filter(budget>0 & revenue>0)
+  #gener data
+  genre_data <-movie %>% 
+    filter(nchar(genres) > 2) %>% 
+    mutate(js = lapply(genres, fromJSON)) %>% 
+    unnest(js) %>% 
+    select(genre = name)
+  genres <- genre_data %>%
+    group_by(genre)%>%
+    count(genre)
   
     data <- reactive({
       movie %>%
@@ -200,7 +226,12 @@ We found the budget numbers do not significantly follow Benford analysis. The bu
            "limitation:
 There are a few limitations about the benford analysis. We can only test whether the data follow Benford distribution. After that, even if we know the data does not follow the distribution, we still have to do more research on the data to explore whether there are some frauds in the data."
          })
- 
+         wordcloud_rep <- repeatable(wordcloud)
+         output$wordcloud <- renderPlot(
+          
+          
+          wordcloud_rep(genres$genre, genres$n, max.words = input$max, random.order = TRUE, random.color = T, rot.per = 0.35, colors = brewer.pal(20,"Dark2"), scale = c(4,.2))
+        )
   
 }
 

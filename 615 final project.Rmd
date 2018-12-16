@@ -115,7 +115,7 @@ genre_data %>%
 genre_data %>%
   group_by(genre)%>%
   count(genre)%>%
-  with(wordcloud(genre, n, max.words = 20, random.order = TRUE, random.color = T, rot.per = 0.35, colors = brewer.pal(20,"Dark2"), scale = c(4,.2)))
+  with(wordcloud(genre, n, max.words = 19, random.order = TRUE, random.color = T, rot.per = 0.35, colors = brewer.pal(20,"Dark2"), scale = c(8,.2)))
 ```
 *The wordclouds gives us a general idea about which genres have the largest proportion. It turns out that Drama, Comedy and Thriller are the top 3 genres with highest number of movies*
 
