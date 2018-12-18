@@ -220,12 +220,12 @@ server <- function(input, output) {
         }
       )
          output$conclusion1 <- renderText({
-           "insights and findings:
-We found the budget numbers do not significantly follow Benford analysis. The budget that start with 50 and 20 have the highest deviation. This result does make sense, because when people decide to make a movie or approve a movie, they never specific the budget to a unit digit. For instant, the number could be 500 million or 200 million dollars"
+           "Insights and findings:
+We found the budget numbers do not significantly follow Benford analysis. The budget that start with 50 and 20 have the highest deviation. This result does make sense, because when people decide to make a movie or approve a movie, they tend to give a rough number about how much money they will spend on this movie. They never specific the budget to a unit digit. For instant, the number could be 500 million or 200 million dollars. So, the result of Benford analysis on variable budget is what we expected. From the Benford analysis on variable revenue, we cannot reject the hypothesis that the distribution follow Benford distribution. However, though the number seems right, there's no evidence to draw the conclusion that there's no fraud in this variable. we may want to do more research on those movies."
          })
          output$conclusion2 <- renderText({
-           "limitation:
-There are a few limitations about the benford analysis. We can only test whether the data follow Benford distribution. After that, even if we know the data does not follow the distribution, we still have to do more research on the data to explore whether there are some frauds in the data."
+           "Limitation:
+There are a few limitations about the Benford analysis. We can only test whether the data follow Benford distribution. After that, even if we know the data does not follow the distribution, we still need to do more research on the data to explore whether there are some frauds in the data. This limitation is also intepreted in the summary: Real data will never conform perfectly to Benford's Law. You should not focus on p-values!"
          })
          wordcloud_rep <- repeatable(wordcloud)
          output$wordcloud <- renderPlot(
