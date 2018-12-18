@@ -7,7 +7,7 @@ output: pdf_document
 
 ##Introduction:
 
-*Watching movie is always a good recreation for people who live under a stressful life style. However, we are constantly facing fake revenue record regarding to the newly released movie. This project will mainly focus on exploring some fundamental information about 5000 movies in the dataset called "The Movie Data Base". Specifically, we will conduct Benford analysis on Budget, revenue and popularity varibles in the dataset.  *
+*Watching movie is always a good recreation for people who live under a stressful life style. However, we are constantly facing fake revenue record regarding to the newly released movie. This project will mainly focus on exploring some fundamental information about 5000 movies in the dataset called "The Movie Data Base". Specifically, we will conduct Benford analysis on Budget, revenue and popularity variables in the dataset. Then we will find out which variable does not follow Benford distribution and the reason behind it.  *
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -21,7 +21,6 @@ library(benford.analysis)
 library(readr)
 library(dplyr)
 library(tidyverse)
-library(kableExtra)
 library(jsonlite) 
 library(RColorBrewer)
 library(wordcloud)
@@ -58,28 +57,28 @@ country_data$production_countries<- recode(country_data$production_countries,"Un
 ```
 
 ###EDA
-####Check the distribution plot with varible budget, revenue, popularity and number of count
+####Check the distribution plot with variable budget, revenue, popularity and number of counts.
 ```{r echo=FALSE}
 
 ggplot(movie,aes(x = budget)) + 
   geom_histogram(fill ="sky blue", color = "black")+
-  ggtitle("The distribution of budget")
+  ggtitle("Figure 1. The distribution of budget")
 
 ggplot(movie,aes(x = revenue)) + 
   geom_histogram(fill ="sky blue", color = "black")+
-  ggtitle("The distribution of revenue")
+  ggtitle("Figure 2.The distribution of revenue")
 
 ggplot(movie,aes(x = popularity)) + 
   geom_histogram(fill ="sky blue", color = "black")+
-  ggtitle("The distribution of popularity")
+  ggtitle("Figure 3.The distribution of popularity")
 
 ggplot(movie,aes(x =vote_count )) + 
   geom_histogram(fill ="sky blue", color = "black")+
-  ggtitle("The distribution of number of vote")
+  ggtitle("Figure 4.The distribution of number of vote")
 
 ```
 
-####Most popular movies
+####Most popular movies in the dataset
 ```{r}
 #Top 20 most popular movie
 pop<-movie%>%
@@ -93,7 +92,43 @@ ggplot(data = pop, aes(x=reorder(title, popularity ), y=popularity)) +
         coord_flip() +
         labs(x = "", y=" Popularity")+ 
         geom_text(aes(label = popularity))+ 
-        ggtitle("Top 20 most popular movie")
+        ggtitle("Figure 5.Top 20 most popular movie")
+
+```
+
+####Most expensive movies in the dataset
+```{r echo=FALSE}
+#Top 20 most expensive movie
+budg<-movie%>%
+  select(title, budget)%>%
+  arrange(desc(budget))
+#chose the top 20 rows of the pop dataset
+budg <- budg[c(0:20),]
+
+ggplot(data = budg, aes(x=reorder(title, budget ), y=budget)) +
+        geom_col(fill="sky blue") + 
+        coord_flip() +
+        labs(x = "", y=" Budget")+ 
+        geom_text(aes(label = budget))+ 
+        ggtitle("Figure 6.Top 20 most expensive movie")
+
+```
+
+####Most lucrative movies in the dataset
+```{r echo=FALSE}
+#Top 20 most lucrative movie
+reve<-movie%>%
+  select(title, revenue)%>%
+  arrange(desc(revenue))
+#chose the top 20 rows of the pop dataset
+reve <- reve[c(0:20),]
+
+ggplot(data = reve, aes(x=reorder(title, revenue), y=revenue)) +
+        geom_col(fill="sky blue") + 
+        coord_flip() +
+        labs(x = "", y=" Popularity")+ 
+        geom_text(aes(label = revenue))+ 
+        ggtitle("Figure 7.Top 20 most lucrative movie")
 
 ```
 
@@ -109,19 +144,22 @@ genre_data %>%
   ggplot(aes(x=reorder(genre, n), y=n)) +
   geom_col(fill="sky blue") + coord_flip() +
   labs(x = "", y = "Number of movies") + 
-  geom_text(aes(label = n))
+  geom_text(aes(label = n))+
+  ggtitle("Figure 8. Number of movies in different genres")
 
 #Generate a Wordcloud
 genre_data %>%
   group_by(genre)%>%
   count(genre)%>%
-  with(wordcloud(genre, n, max.words = 19, rot.per = 0.35, colors = brewer.pal(2,"Dark2"), scale = c(8,.2)))
+  with(wordcloud(genre, n, max.words = 15, rot.per = 0.35, colors = "sky blue" , scale = c(4,.2)))
+
+#more colorful wordcloud, apply color = brewer.pal(2,"Dark2")
 ```
 *The wordclouds gives us a general idea about which genres have the largest proportion. It turns out that Drama, Comedy and Thriller are the top 3 genres with highest number of movies*
 
 
 ###mapping with production countries
-```{r echo=FALSE, warning=FALSE}
+```{r echo=FALSE}
 #mapping
 map.world = map_data("world")
 
@@ -133,7 +171,7 @@ country<-country_data %>%
 
 ggplot(data= country, aes(x = reorder(production_countries, n), y = n, fill = production_countries))+ 
   geom_col() + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
-  ggtitle("the distribution of movies in different countries")+ 
+  ggtitle("Figure 9.the distribution of movies in different countries")+ 
   geom_text(aes(label = n),position = position_dodge(0.9),vjust = 0) + 
   coord_flip()+
   labs(x = "", y ="number of movies")
@@ -148,7 +186,7 @@ ggplot() +
   geom_polygon(data = map.world_joined, aes(x = long, y = lat, group = group, fill = fill_flg)) +
   scale_fill_manual(values = c("#CCCCCC","#e60000")) +
   labs(title = "Countries with more than 20 movies") +
-  theme(text = element_text(family = "Gill Sans", color = "#FFFFFF")
+  theme(text = element_text(color = "#FFFFFF")
         ,panel.background = element_rect(fill = "#444444")
         ,plot.background = element_rect(fill = "#444444")
         ,panel.grid = element_blank()
@@ -160,36 +198,44 @@ ggplot() +
         ,legend.position = "none")
 ```
 ##Bnford analysis:
-```{r}
-#benford analysis base on diferent variables.
+```{r echo=FALSE}
+#benford analysis base on different variables.
 movie_b <- benford(movie$budget)
 plot(movie_b)
 movie_b
 ```
-*as we can see from the distrbution and summary of the Benfore test, the budget data in movie dose not follow Benford distribution. A lot of lines exceed the red line threshold. Also the p-value in the summary is less than 0.05, which reject the htpothesis that the distribution follow benford distribution. *
+*as we can see from the distrbution and summary of the Benfore test, the budget data in movie dose not follow Benford distribution. A lot of lines exceed the red line threshold. Also, the p-value in the summary is less than 0.05, which reject the hypothesis that the distribution follow Benford distribution. *
 
-```{r}
+```{r echo=FALSE}
 movie_r <- benford(movie$revenue)
 plot(movie_r)  
 movie_r
 ```
-*The benford test on revenue indicates p-value is 0.2925 > 0.05, so do not reject the hypothesis that the distribution follow Benford distribution. This is result is what *
+*The Benford test on revenue indicates p-value is 0.2925 > 0.05, so do not reject the hypothesis that the distribution follow Benford distribution. This is result is what *
 
-```{r}
+```{r echo=FALSE}
 movie_p <- benford(movie$popularity)
 plot(movie_p)  
 movie_p
+summary(movie$popularity)
 ```
 *As for the variable popularity, the p-values from Chi-squared test is 0.0001389, which is less than 0.05. So we do reject the hypothesis that the distribution follow Benford distribution*
 
 ## Conclusion:
 ###insights and findings:
-*We found the budget numbers do not significantly follow Benford analysis. The budget that start with 50 and 20 have the highest deviation. This result does make sense, because when people decide to make a movie or approve a movie, they never specific the budget to a unit digit. For instant, the number could be 500 million or 200 million dollars*
+*We found the budget numbers do not significantly follow Benford analysis. The budget that start with 50 and 20 have the highest deviation. This result does make sense, because when people decide to make a movie or approve a movie, they tends to give a rough number about how much money they will spend on this movie. They never specific the budget to a unit digit. For instant, the number could be 500 million or 200 million dollars. So the result of Benford analysis on variable budget is what we expected.*
+
+*From the Benford analysis on variable revenue, we cannot reject the hypothesis that the distribution follow Benford distribution. However, though the number seems right, there's no evidence to draw the conclusion that there's no fraud in this variable. we may want to do more research on those movies.*
+
 
 ###limitation:
-*There are a few limitations about the benford analysis. We can only test whether the data follow Benford distribution. After that, even if we know the data does not follow the distribution, we still have to do more research on the data to explore whether there are some frauds in the data.*
+*There are a few limitations about the Benford analysis. We can only test whether the data follow Benford distribution. After that, even if we know the data does not follow the distribution, we still need to do more research on the data to explore whether there are some frauds in the data. This limitation is also intepreted in the summary: "Real data will never conform perfectly to Benford's Law. You should not focus on p-values!"*
 
-###Reference:
+##Acknowledge:
+*Special thanks to professor Wright who give me advice to choose dataset. Thanks for his consistency in teaching data cleaning, data manipulation and all kinds of data visualization methods. *
+
+
+##Reference:
 https://www.kaggle.com/tmdb/tmdb-movie-metadata
 
 
